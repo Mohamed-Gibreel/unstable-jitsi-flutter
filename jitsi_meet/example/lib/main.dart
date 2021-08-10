@@ -4,8 +4,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
+import 'package:jitsi_meet_example/LifeCycleManager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(LifeCycleManager(child: MyApp()));
 
 class MyApp extends StatelessWidget {
   @override
@@ -21,7 +23,7 @@ class Meeting extends StatefulWidget {
 
 class _MeetingState extends State<Meeting> {
   final serverText = TextEditingController();
-  final roomText = TextEditingController(text: "plugintestroom");
+  final roomText = TextEditingController(text: "mvp-space-test");
   final subjectText = TextEditingController(text: "My Plugin Test Meeting");
   final nameText = TextEditingController(text: "Plugin Test User");
   final emailText = TextEditingController(text: "fake@email.com");
@@ -30,6 +32,19 @@ class _MeetingState extends State<Meeting> {
   bool? isAudioOnly = true;
   bool? isAudioMuted = true;
   bool? isVideoMuted = true;
+
+//add this under all variable declare
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+  //add this under _onError() method
+  Future<void> saveBoolPreference(bool check) async {
+    SharedPreferences prefs = await _prefs;
+    setState(() {
+      bool checkmeet = check;
+      prefs.setBool('checkmeet', checkmeet);
+      print('SharedPref of checkmeet: $checkmeet');
+    });
+  }
 
   @override
   void initState() {
@@ -190,6 +205,9 @@ class _MeetingState extends State<Meeting> {
             width: double.maxFinite,
             child: ElevatedButton(
               onPressed: () {
+                setState(() {
+                  saveBoolPreference(true);
+                });
                 _joinMeeting();
               },
               child: Text(
@@ -298,6 +316,7 @@ class _MeetingState extends State<Meeting> {
 
   void _onConferenceTerminated(message) {
     debugPrint("_onConferenceTerminated broadcasted with message: $message");
+    saveBoolPreference(false);
   }
 
   _onError(error) {
